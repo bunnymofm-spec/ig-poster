@@ -16,6 +16,8 @@ const api = async (method, path, params = {}) => {
 };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const now = Date.now(), LATE = 6 * 3600e3;
+if (process.env.SELFTEST) { const u = sched.jobs[0]?.videoUrl; fs.writeFileSync('in.mp4', Buffer.from(await (await fetch(u)).arrayBuffer()));
+  execFileSync('python3', ['render.py', 'in.mp4', 'out.mp4', 'pov: you finally met me in person', '3'], { stdio: 'inherit' }); console.log('selftest render ok', fs.statSync('out.mp4').size); process.exit(0); }
 for (const j of sched.jobs.sort((a, b) => a.dueAt.localeCompare(b.dueAt))) {
   const s = (state.jobs[j.id] ||= { tries: 0 });
   if (s.status === 'posted' || s.status === 'unknown' || s.status === 'failed' || s.status === 'missed') continue;
