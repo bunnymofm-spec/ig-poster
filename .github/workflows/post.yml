@@ -12,6 +12,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+      - run: python3 -c 'import PIL' 2>/dev/null || pip install -q pillow; which ffmpeg || (sudo apt-get update -q && sudo apt-get install -yq ffmpeg)
       - run: git config user.name poster && git config user.email poster@users.noreply.github.com
       - run: node post.mjs
         env:
