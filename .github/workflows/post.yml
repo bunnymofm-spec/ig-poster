@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs: { selftest: { type: boolean, default: false } }
 concurrency: { group: post, cancel-in-progress: false }
-permissions: { contents: write }
+permissions: { contents: write, actions: write }
 jobs:
   post:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,6 +22,7 @@ jobs:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT: ${{ secrets.TG_CHAT }}
           SELFTEST: ${{ inputs.selftest && '1' || '' }}
+          GH_TOKEN: ${{ github.token }}
       - run: |
           git add state.enc
           git diff --cached --quiet || { git commit -qm state; for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 5; done; }
