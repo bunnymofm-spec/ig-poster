@@ -17,7 +17,7 @@ export async function reachCheck({ sched, state, api, notes }) {
       const usual = vals.length ? vals[Math.floor(vals.length / 2)] : 0;
       const media = await api('GET', `${igId}/media`, { fields: 'timestamp', limit: '1' });
       const lastPost = Date.parse(media.data?.[0]?.timestamp || 0);
-      const posting = now - lastPost < 48 * 3600e3;
+      const posting = now - lastPost < 48 * 3600e3 && now - lastPost > 6 * 3600e3; // a fresh post needs ~6 h before its reach means anything
       a.non = non; a.usual = usual; a.checked = r._at;
       if (usual < 100 || !posting) continue; // too little to judge, or nothing posted lately
       const low = non < usual * 0.2;
