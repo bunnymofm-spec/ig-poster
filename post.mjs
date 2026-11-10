@@ -1,6 +1,6 @@
 // Runs on GitHub every ~20 min: posts every due reel of schedule.enc to Instagram and records the result in state.enc.
 // Never posts a job twice: a job that reached "publish" is done (or 'unknown'), never retried.
-import fs from 'node:fs'; import { execSync, execFileSync } from 'node:child_process'; import { seal, open } from './crypt.mjs';
+import fs from 'node:fs'; import { execSync, execFileSync } from 'node:child_process'; import { seal, open } from './crypt.mjs'; import { reachCheck } from './reach.mjs';
 const { IG_TOKEN, IG_POSTER_KEY: KEY, TG_TOKEN, TG_CHAT } = process.env;
 const G = 'https://graph.facebook.com/v21.0';
 const sched = fs.existsSync('schedule.enc') ? open(fs.readFileSync('schedule.enc', 'utf8'), KEY) : { jobs: [], accounts: {} };
@@ -59,6 +59,7 @@ for (const [acct, igId] of Object.entries(sched.accounts)) {
   let c = {}; try { c = await api('POST', `${igId}/media`, { media_type: 'REELS', video_url: probe, trial_params: JSON.stringify({ graduation_strategy: 'MANUAL' }) }); } catch {}
   if (c.id) { t.ok = today; notes.push(`🧪 @${acct} can now post TRIAL reels — the 12-a-night trials can start`); }
 }
+try { await reachCheck({ sched, state, api, notes }); } catch (e) { console.log('reach check failed', String(e)); }
 save();
 if (notes.length && TG_TOKEN) await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: TG_CHAT, text: `Instagram poster:\n${notes.join('\n')}`, disable_web_page_preview: true }) });
 console.log(notes.length ? `${notes.length} event(s)` : 'nothing due');
