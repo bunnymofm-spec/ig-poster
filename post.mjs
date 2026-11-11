@@ -25,7 +25,7 @@ for (const j of sched.jobs.sort((a, b) => a.dueAt.localeCompare(b.dueAt))) {
     if (s.status === 'posted' || s.status === 'unknown' || s.status === 'failed' || s.status === 'missed') continue;
     const due = Date.parse(j.dueAt);
     if (due > now) continue;
-    if (now - due > LATE) { s.status = 'missed'; notes.push(`⏰ @${j.account} ${j.label}: missed its slot by more than 6 h — not posted`); continue; }
+    if (now - due > LATE && !state.blockedNoted) { s.status = 'missed'; notes.push(`⏰ @${j.account} ${j.label}: missed its slot by more than 6 h — not posted`); continue; }
     const igId = sched.accounts[j.account]; if (!igId) continue;
     s.tries++;
     const params = { media_type: 'REELS', video_url: j.videoUrl, caption: j.caption || '', share_to_feed: 'true' };
