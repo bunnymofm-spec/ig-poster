@@ -42,7 +42,9 @@ for (const j of sched.jobs.sort((a, b) => a.dueAt.localeCompare(b.dueAt))) {
           if (!u.success) c = { error: { message: `upload refused: ${JSON.stringify(u).slice(0, 150)}` } }; }
       } else c = await api('POST', `${igId}/media`, params);
     } catch (e) { c = { error: { message: String(e).slice(0, 200) } }; }
-    if (!c.id) { s.last = c.error?.error_user_msg || c.error?.message || JSON.stringify(c).slice(0, 200); if (s.tries >= 3) { s.status = 'failed'; notes.push(`❌ @${j.account} ${j.label}: ${s.last}`); } continue; }
+    if (!c.id && /API access blocked/i.test(c.error?.message || '')) { s.tries--; if (!state.blockedNoted) { notes.push('⛔ Meta has blocked the poster\'s API access — nothing can post until it is lifted. Reels stay scheduled and go out once it works again.'); state.blockedNoted = new Date().toISOString(); } continue; }
+  if (c.id) state.blockedNoted = null;
+  if (!c.id) { s.last = c.error?.error_user_msg || c.error?.message || JSON.stringify(c).slice(0, 200); if (s.tries >= 3) { s.status = 'failed'; notes.push(`❌ @${j.account} ${j.label}: ${s.last}`); } continue; }
     let st = '';
     for (let i = 0; i < 30; i++) { await sleep(10e3); try { st = (await api('GET', c.id, { fields: 'status_code' })).status_code; } catch { st = ''; } if (st === 'FINISHED' || st === 'ERROR' || st === 'EXPIRED') break; }
     if (st !== 'FINISHED') { s.last = `video processing ${st || 'timed out'}`; if (s.tries >= 3) { s.status = 'failed'; notes.push(`❌ @${j.account} ${j.label}: ${s.last}`); } continue; }
